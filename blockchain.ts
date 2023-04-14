@@ -1,4 +1,5 @@
 import * as Crypto from "crypto-js";
+import { broadcastLatest } from "./p2p";
 
 class Block {
     public index: number;
@@ -32,11 +33,13 @@ const calculateBlockHash = (
 
 const genesisBlock: Block = new Block(0, "2020202020202", null, "Genesis block", 123456);
 
-const blockchain: Block[] = [genesisBlock];
+let blockchain: Block[] = [genesisBlock];
+
+const getBlockchain = (): Block[] => blockchain
 
 const getLatestBlock = (): Block => blockchain[blockchain.length - 1];
 
-const addBlock = (data: string): Block => {
+const generateNextBlock = (data: string): Block => {
     const previousBlock: Block = getLatestBlock();
     const newIndex: number = previousBlock.index + 1;
     const newTimestamp: number = new Date().getTime() / 1000;
@@ -53,7 +56,23 @@ const addBlock = (data: string): Block => {
         data,
         newTimestamp
     );
+    addBlock(newBlock)
+    broadcastLatest()
     return newBlock;
+}
+
+const addBlock = (newBlock: Block): void => {
+    if (isValidNewBlock(newBlock, getLatestBlock())) {
+        blockchain.push(newBlock);
+    }
+}
+
+const addBlockToChain = (newBlock: Block) => {
+    if (isValidNewBlock(newBlock, getLatestBlock())) {
+        blockchain.push(newBlock);
+        return true
+    }
+    return false
 }
 
 const isValidBlockStructure = (block: Block): boolean => {
@@ -64,10 +83,13 @@ const isValidBlockStructure = (block: Block): boolean => {
         && typeof block.data === 'string';
 };
 
-const isValidBlock = (candidateBlock: Block, previousBlock: Block): boolean => {
+const isValidNewBlock = (candidateBlock: Block, previousBlock: Block): boolean => {
     if (!isValidBlockStructure(candidateBlock)) {
+        console.log("The candidate block structure is not valid");
         return false;
-    } else if (previousBlock.index + 1 !== candidateBlock.index) {
+    }
+
+    if (previousBlock.index + 1 !== candidateBlock.index) {
         return false;
     } else if (previousBlock.hash !== candidateBlock.previousHash) {
         return false;
@@ -93,10 +115,22 @@ const isValidChain = (blockchainToValidate: Block[]): boolean => {
     }
 
     for (let i = 1; i < blockchainToValidate.length; i++) {
-        if (!isValidBlock(blockchainToValidate[i], blockchainToValidate[i - 1])) {
+        if (!isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i - 1])) {
             return false;
         }
     }
 
     return true;
 }
+
+const replaceChain = (newChain: Block[]): void => {
+    if (isValidChain(newChain) && newChain.length > blockchain.length) {
+        console.log("Received blockchain is valid. Replacing current blockchain with received blockchain");
+        blockchain = newChain;
+        broadcastLatest()
+    } else {
+        console.log("Received blockchain is not valid. Do nothing");
+    }
+}
+
+export { Block, getLatestBlock, getBlockchain, generateNextBlock, isValidBlockStructure, isValidNewBlock, isValidChain, replaceChain, addBlockToChain};
