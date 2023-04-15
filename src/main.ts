@@ -4,7 +4,7 @@ import * as bodyPaser from 'body-parser'
 import {Block, generateNextBlock, getBlockchain} from './blockchain'
 import {connectToPeers, getSockets, initP2PServer} from './p2p'
 
-const httpPort: any = parseInt(process.env.P2P_PORT) || 6001;
+const httpPort: any = parseInt(process.env.HTTP_PORT) || 3001;
 const p2pPort: any = parseInt(process.env.P2P_PORT) || 6001
 
 const initHttpServer = (httpPort: number) => {
