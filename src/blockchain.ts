@@ -1,7 +1,6 @@
 import * as Crypto from "crypto-js";
 import { broadcastLatest } from "./p2p";
 import { hexToBinary } from "./utils"
-import { time, timeStamp } from "console";
 
 // in seconds
 const BLOCK_GENERATION_INTERVAL: number = 10;
@@ -73,7 +72,7 @@ const getAdjustedDifficulty = (latestBlock: Block, aBlockchain: Block[]) => {
     const prevAdjustmentBlock: Block = aBlockchain[blockchain.length - DIFFICULTY_ADJUSTMENT_INTERVAL]
     const timeExpected: number = BLOCK_GENERATION_INTERVAL * DIFFICULTY_ADJUSTMENT_INTERVAL
     const timeTaken: number = latestBlock.timestamp - prevAdjustmentBlock.timestamp
-    if (timeTaken < timeExpected) {
+    if (timeTaken < timeExpected / 2) {
         return prevAdjustmentBlock.difficulty + 1
     } else if (timeTaken > timeExpected * 2) {
         return prevAdjustmentBlock.difficulty - 1
