@@ -1,7 +1,7 @@
 import {ec} from 'elliptic'
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
 import * as _ from 'lodash'
-import { UnspentTxOut } from './transaction'
+import { Transaction, TxIn, TxOut, UnspentTxOut, getPublicKey, getTransactionId, signTxIn } from './transaction'
 
 const EC = new ec('secp256k1')
 const privateKeyLocation = 'node/wallet/private_key'
@@ -53,4 +53,41 @@ const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) =>
         }
     }
     throw Error('not enough coins to send transaction');
+}
+
+const createTxOuts = (receiverAddres: string, myAddress: string, amount, leftOverAmount: number) => {
+    const txOut1: TxOut = new TxOut(receiverAddres, amount)
+    if (leftOverAmount === 0) {
+        return [txOut1]
+    } else {
+        const leftOverTx = new TxOut(myAddress, leftOverAmount)
+        return [txOut1, leftOverTx]
+    }
+}
+
+const createTransaction = (receiverAddress: string, amount: number, privateKey: string, unspentTxOuts: UnspentTxOut[]): Transaction => {
+    const myAddress: string = getPublicKey(privateKey)
+    const myUnspentTxOuts: UnspentTxOut[] = unspentTxOuts.filter((uTxO: UnspentTxOut) => uTxO.address === myAddress)
+
+    const {includedUnspentTxOuts, leftOverAmount} = findTxOutsForAmount(amount, myUnspentTxOuts)
+
+    const toUnsignedTxIn = (unspentTxOut: UnspentTxOut) => {
+        const txIn: TxIn = new TxIn()
+        txIn.txOutId = unspentTxOut.txOutId
+        txIn.txOutIndex = unspentTxOut.txOutIndex
+        return txIn
+    }
+
+    const unsignedTxIns: TxIn[] = includedUnspentTxOuts.map(toUnsignedTxIn)
+    const tx: Transaction = new Transaction()
+    tx.txIns = unsignedTxIns
+    tx.txOuts = createTxOuts(receiverAddress, myAddress, amount, leftOverAmount)
+    tx.id = getTransactionId(tx)
+
+    tx.txIns = tx.txIns.map((txIn: TxIn, index: number) => {
+        txIn.signature = signTxIn(tx, index, privateKey, unspentTxOuts)
+        return txIn
+    })
+
+    return tx
 }
