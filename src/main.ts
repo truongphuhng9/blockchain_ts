@@ -11,12 +11,25 @@ const initHttpServer = (httpPort: number) => {
     const app = express()
     app.use(bodyPaser.json())
 
+    app.use((err, req, res, next) => {
+        if (err) {
+            res.status(400).send(err.message)
+        }
+    })
+
     app.get('/blocks', (req, res) => {
         res.send(getBlockchain())
     })
 
     app.post('/mine-block', (req, res) => {
+        if (req.body.data == null) {
+            res.send('data parameter is missing')
+            return
+        }
         const newBlock: Block = generateNextBlock(req.body.data)
+        if (newBlock === null) {
+            res.status(400).send('could not generate block')
+        }
         res.send(newBlock)
     })
 
