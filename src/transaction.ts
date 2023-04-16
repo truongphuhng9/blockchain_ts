@@ -160,7 +160,7 @@ const isValidTxOutStructure = (txOut: TxOut): boolean => {
 };
 
 
-const validateTransaction = (transaction: Transaction, aUnspentTxOuts: UnspentTxOut[]): boolean {
+const validateTransaction = (transaction: Transaction, aUnspentTxOuts: UnspentTxOut[]): boolean => {
     if (getTransactionId(transaction) != transaction.id) {
         console.log('invalid tx id: ' + transaction.id)
         return false
