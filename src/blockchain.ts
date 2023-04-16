@@ -1,7 +1,8 @@
 import * as Crypto from "crypto-js";
 import { broadcastLatest } from "./p2p";
 import { hexToBinary } from "./utils"
-import { Transaction, UnspentTxOut, processTransactions } from "./transaction"
+import { Transaction, UnspentTxOut, getCoinbaseTransaction, isValidAddress, processTransactions } from "./transaction"
+import { createTransaction, getBalance, getPrivateKeyFromWallet, getPublicFromWallet } from './wallet'
 
 // in seconds
 const BLOCK_GENERATION_INTERVAL: number = 10
@@ -93,7 +94,7 @@ const getAccummulateDifficulty = (aBlockchain: Block[]): number => {
         .reduce((a, b) => a + b)
 }
 
-const generateNextBlock = (data: Transaction[]): Block => {
+const generateRawNextBlock = (data: Transaction[]): Block => {
     const previousBlock: Block = getLatestBlock()
     const difficulty: number = getDifficuty(getBlockchain())
     const newIndex: number = previousBlock.index + 1
@@ -105,7 +106,34 @@ const generateNextBlock = (data: Transaction[]): Block => {
     } else {
         return null
     }
-    
+}
+
+const generateNextBlock = () => {
+    const coinbaseTx: Transaction = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1)
+    const blockData: Transaction[] = [coinbaseTx]
+    return generateRawNextBlock(blockData)
+}
+
+const generateNextBlockWithTransaction = (receiverAddress: string, amount: number) => {
+    if (!isValidAddress(receiverAddress)) {
+        throw Error('invalid address')
+    }
+    if (typeof amount !== 'number') {
+        throw Error('invalid amount')
+    }
+
+    console.log("Pass validate address")
+
+    const coinbaseTx: Transaction = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1)
+    const tx: Transaction = createTransaction(receiverAddress, amount, getPrivateKeyFromWallet(), unspentTxOuts)
+    const blockData: Transaction[] = [coinbaseTx, tx]
+
+    console.log('Pass first generate')
+    return generateRawNextBlock(blockData)
+}
+
+const getAccountBalance = (): number => {
+    return getBalance(getPublicFromWallet(), unspentTxOuts)
 }
 
 const hashMatchesDifficulty = (hash: string, difficulty: number): boolean => {
@@ -217,4 +245,6 @@ const replaceChain = (newChain: Block[]): void => {
     }
 }
 
-export { Block, getLatestBlock, getBlockchain, generateNextBlock, isValidBlockStructure, isValidNewBlock, isValidChain, replaceChain, addBlockToChain};
+export { Block, getLatestBlock, getBlockchain, getAccountBalance,
+    generateNextBlock, generateRawNextBlock, generateNextBlockWithTransaction,
+    isValidBlockStructure, isValidNewBlock, isValidChain, replaceChain, addBlockToChain};

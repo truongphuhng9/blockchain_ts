@@ -4,7 +4,7 @@ import * as _ from 'lodash'
 import { Transaction, TxIn, TxOut, UnspentTxOut, getPublicKey, getTransactionId, signTxIn } from './transaction'
 
 const EC = new ec('secp256k1')
-const privateKeyLocation = 'node/wallet/private_key'
+const privateKeyLocation = __dirname + '/node/wallet/private_key'
 
 const generatePrivateKey = ():string => {
     const keyPair = EC.genKeyPair()
@@ -19,7 +19,7 @@ const getPrivateKeyFromWallet = (): string => {
 
 const getPublicFromWallet = (): string => {
     const privateKey = getPrivateKeyFromWallet()
-    const key = EC.getKeyFromPrivate(privateKey, 'hex')
+    const key = EC.keyFromPrivate(privateKey, 'hex')
     return key.getPublic().encode('hex')
 }
 
@@ -27,7 +27,6 @@ const initWallet = () => {
     if (existsSync(privateKeyLocation)) {
         return
     }
-
     const newPrivateKey = generatePrivateKey()
 
     writeFileSync(privateKeyLocation, newPrivateKey)
@@ -91,3 +90,5 @@ const createTransaction = (receiverAddress: string, amount: number, privateKey: 
 
     return tx
 }
+
+export {createTransaction, getPublicFromWallet, getPrivateKeyFromWallet, getBalance, generatePrivateKey, initWallet}
