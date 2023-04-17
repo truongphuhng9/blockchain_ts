@@ -1,7 +1,7 @@
 import * as express from 'express'
 import * as bodyPaser from 'body-parser'
 
-import {Block, generateRawNextBlock, generateNextBlock, getBlockchain, getAccountBalance, generateNextBlockWithTransaction} from './blockchain'
+import {Block, generateRawNextBlock, generateNextBlock, getBlockchain, getAccountBalance, generateNextBlockWithTransaction, sendTransaction} from './blockchain'
 import {connectToPeers, getSockets, initP2PServer} from './p2p'
 import { getPublicFromWallet, initWallet } from './wallet';
 
@@ -57,6 +57,23 @@ const initHttpServer = (httpPort: number) => {
         const amount = req.body.amount
         try {
             const resp = generateNextBlockWithTransaction(address, amount)
+            res.send(resp)
+        } catch (e) {
+            console.log(e.message)
+            res.status(400).send(e.message)
+        }
+    })
+
+    app.post('/send-transaction', (req, res) => {
+        try {
+            const address = req.body.address
+            const amount = req.body.amount
+
+            if (address === undefined || amount === undefined) {
+                throw Error('invalid address or amount')
+            }
+
+            const resp = sendTransaction(address, amount)
             res.send(resp)
         } catch (e) {
             console.log(e.message)

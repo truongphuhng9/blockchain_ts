@@ -344,5 +344,6 @@ const hasDuplicates = (txIns: TxIn[]): boolean => {
 export {
     processTransactions, signTxIn, getTransactionId, 
     UnspentTxOut, TxIn, TxOut, Transaction,
-    getCoinbaseTransaction, getPublicKey, isValidAddress
+    getCoinbaseTransaction, getPublicKey, isValidAddress,
+    validateTransaction
 }

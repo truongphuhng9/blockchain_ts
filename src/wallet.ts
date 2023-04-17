@@ -64,9 +64,33 @@ const createTxOuts = (receiverAddres: string, myAddress: string, amount, leftOve
     }
 }
 
-const createTransaction = (receiverAddress: string, amount: number, privateKey: string, unspentTxOuts: UnspentTxOut[]): Transaction => {
+const filterTxPoolTxs = (unspentTxOuts: UnspentTxOut[], transactionPool: Transaction[]): UnspentTxOut[] => {
+    const txIns: TxIn[] = _(transactionPool)
+        .map((tx: Transaction) => tx.txIns)
+        .flatten()
+        .value()
+    
+    const removable: UnspentTxOut[] = []
+    for (const unspentTxOut of  unspentTxOuts) {
+        const txIn = _.find(txIns, (aTxIn: TxIn) => {
+            return aTxIn.txOutIndex === unspentTxOut.txOutIndex && aTxIn.txOutId === unspentTxOut.txOutId
+        })
+
+        if (txIn === undefined) {
+
+        } else {
+            removable.push(unspentTxOut)
+        }
+    }
+
+    return _.without(unspentTxOuts, ...removable)
+}
+
+const createTransaction = (receiverAddress: string, amount: number, privateKey: string, unspentTxOuts: UnspentTxOut[], txPool: Transaction[]): Transaction => {
     const myAddress: string = getPublicKey(privateKey)
-    const myUnspentTxOuts: UnspentTxOut[] = unspentTxOuts.filter((uTxO: UnspentTxOut) => uTxO.address === myAddress)
+    const myUnspentTxOutsA: UnspentTxOut[] = unspentTxOuts.filter((uTxO: UnspentTxOut) => uTxO.address === myAddress)
+
+    const myUnspentTxOuts = filterTxPoolTxs(myUnspentTxOutsA, txPool)
 
     const {includedUnspentTxOuts, leftOverAmount} = findTxOutsForAmount(amount, myUnspentTxOuts)
 
