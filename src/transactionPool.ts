@@ -1,6 +1,7 @@
 import * as _ from 'lodash'
 import { Transaction, UnspentTxOut, validateTransaction } from './transaction'
 import { TxIn } from './transaction'
+import { transcode } from 'buffer'
 
 let transactionPool: Transaction[] = []
 
@@ -19,6 +20,29 @@ const addToTransactionPool = (tx: Transaction, aUnspentTxOuts: UnspentTxOut[]) =
 
 
     transactionPool.push(tx)
+}
+
+const updateTransactionPool = (unspentTxOuts: UnspentTxOut[]) => {
+    const invalidTxs = []
+    for (const tx of transactionPool) {
+        for (const txIn of tx.txIns) {
+            if (!hasTxIn(txIn, unspentTxOuts))
+            invalidTxs.push(tx)
+            break
+        }
+    }
+
+    if (invalidTxs.length > 0) {
+        console.log('removing the following transactions from txPool: %s', JSON.stringify(invalidTxs))
+        transactionPool = _.without(transactionPool, ...invalidTxs)
+    }
+}
+
+const hasTxIn = (txIn: TxIn, aUnspentTxOuts: UnspentTxOut[]) => {
+    const foundTxIn = aUnspentTxOuts.find((uTxO: UnspentTxOut) => {
+        return uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex
+    })
+    return foundTxIn !== undefined
 }
 
 const getTxPoolIns = (aTransactionPool: Transaction[]): TxIn[] => {
@@ -46,4 +70,4 @@ const isValidTxForPool = (tx: Transaction, aTransactionsPool: Transaction[]): bo
     return true
 }
 
-export { getTransactionPool, addToTransactionPool }
+export { getTransactionPool, addToTransactionPool, updateTransactionPool }
