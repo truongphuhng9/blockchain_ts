@@ -23,6 +23,12 @@ const getPublicFromWallet = (): string => {
     return key.getPublic().encode('hex')
 }
 
+const deleteWallet = () => {
+    if (existsSync(privateKeyLocation)) {
+        unlinkSync(privateKeyLocation)
+    }
+}
+
 const initWallet = () => {
     if (existsSync(privateKeyLocation)) {
         return
@@ -38,6 +44,10 @@ const getBalance = (address: string, unspentTxOuts: UnspentTxOut[]): number => {
         .filter((uTxO: UnspentTxOut) => uTxO.address === address)
         .map((uTxO: UnspentTxOut) => uTxO.amount)
         .sum()
+}
+
+const findUnspentTxOuts = (ownerAddress: string, unspentTxOuts: UnspentTxOut[]) => {
+    return _.filter(unspentTxOuts, (uTxO: UnspentTxOut) => uTxO.address === ownerAddress)
 }
 
 const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) => {
@@ -115,4 +125,5 @@ const createTransaction = (receiverAddress: string, amount: number, privateKey: 
     return tx
 }
 
-export {createTransaction, getPublicFromWallet, getPrivateKeyFromWallet, getBalance, generatePrivateKey, initWallet}
+export {createTransaction, getPublicFromWallet, getPrivateKeyFromWallet, 
+    getBalance, generatePrivateKey, initWallet, deleteWallet, findUnspentTxOuts}
