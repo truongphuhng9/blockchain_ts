@@ -169,6 +169,7 @@ const isValidTxOutStructure = (txOut: TxOut): boolean => {
 
 const validateTransaction = (transaction: Transaction, aUnspentTxOuts: UnspentTxOut[]): boolean => {
     if (!isValidTransactionStructure(transaction)) {
+        console.log('invalid tx structure')
         return false
     }
     
@@ -262,17 +263,10 @@ const validateTxIn = (txIn: TxIn, transaction: Transaction, aUnspentTxOuts: Unsp
 
     const address = referencedUnspentTxOut.address
     const key = ec.keyFromPublic(address, 'hex')
-    console.log('before verify')
 
-    const m = txIn.signature.match(/([a-f\d]{64})/gi)  // weird
-    const signature = {
-        r: m[0],
-        s: m[1]
-    }
-    const validSignature: boolean = key.verify(transaction.id, signature)
-    console.log('verified successfully')
+    const validSignature: boolean = key.verify(transaction.id, txIn.signature)
     if (!validSignature) {
-        console.log('invalid txIn signature: %s txId: %s address: %s', txIn.signature, transaction.id, referencedUnspentTxOut.address)
+        console.log('invalid txIn signature: %s txId: %s address: %s', txIn.signature, transaction.id, referencedUnspentTxOut.address, txIn.txOutId, txIn.txOutIndex)
         return false
     }
     return true

@@ -112,6 +112,7 @@ const createTransaction = (receiverAddress: string, amount: number, privateKey: 
     }
 
     const unsignedTxIns: TxIn[] = includedUnspentTxOuts.map(toUnsignedTxIn)
+    
     const tx: Transaction = new Transaction()
     tx.txIns = unsignedTxIns
     tx.txOuts = createTxOuts(receiverAddress, myAddress, amount, leftOverAmount)

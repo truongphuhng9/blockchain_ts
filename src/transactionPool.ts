@@ -1,7 +1,6 @@
 import * as _ from 'lodash'
 import { Transaction, UnspentTxOut, validateTransaction } from './transaction'
 import { TxIn } from './transaction'
-import { transcode } from 'buffer'
 
 let transactionPool: Transaction[] = []
 
@@ -15,7 +14,7 @@ const addToTransactionPool = (tx: Transaction, aUnspentTxOuts: UnspentTxOut[]) =
     }
 
     if (!isValidTxForPool) {
-        throw Error('Trying to add invalid tx to poo')
+        throw Error('Trying to add invalid tx to pool')
     }
 
 

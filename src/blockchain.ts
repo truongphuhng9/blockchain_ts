@@ -3,7 +3,7 @@ import * as _ from "lodash"
 
 import { broadcastLatest, broadcastTransactionPool } from "./p2p"
 import { hexToBinary } from "./utils"
-import { Transaction, UnspentTxOut, getCoinbaseTransaction, isValidAddress, processTransactions } from "./transaction"
+import { Transaction, TxIn, TxOut, UnspentTxOut, getCoinbaseTransaction, getTransactionId, isValidAddress, processTransactions } from "./transaction"
 import { createTransaction, getBalance, getPrivateKeyFromWallet, getPublicFromWallet, findUnspentTxOuts } from './wallet'
 import { getTransactionPool, addToTransactionPool, updateTransactionPool } from './transactionPool'
 // in seconds
@@ -55,17 +55,23 @@ const calculateHashForBlock = (block: Block): string => {
     return calculateHash(block.index, block.previousHash, block.timestamp, block.data, block.difficulty, block.nonce)
 }
 
-const genesisTransaction = {
-    'txIns': [
-        {'signature': '', 'txOutId': '', 'txOutIndex': 0}
-    ],
-    'txOuts': [
-        {'address': '04998ff100ea5cff6c27aef1a54d00095c2ba6a9b2609afd6a129ca4fe6efd7b01af75692530e80f24804d542147324d1218d1db8c0e03230afe936996c9148ec6', 'amount': 50}
-    ],
-    'id': 'e655f6a5f26dc9b4cac6e46f52336428287759cf81ef5ff10854f69d68f43fa3'
+const getGenesisTransaction = (address: string): Transaction => {
+    const genesisTransaction = new Transaction()
+    const txIn = new TxIn()
+    txIn.txOutId = ''
+    txIn.txOutIndex = 0
+    txIn.signature = ''
+
+    const txOut = new TxOut(address, 50)
+
+    genesisTransaction.txIns = [txIn]
+    genesisTransaction.txOuts = [txOut]
+    genesisTransaction.id = getTransactionId(genesisTransaction)
+
+    return genesisTransaction
 }
 
-const genesisBlock: Block = new Block(0, "2020202020202", '', [genesisTransaction], 123456, 0, 0)
+const genesisBlock: Block = new Block(0, "2020202020202", '', [], 123456, 0, 0)
 
 let blockchain: Block[] = [genesisBlock]
 
