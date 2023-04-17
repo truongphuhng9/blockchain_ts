@@ -292,4 +292,4 @@ const handleReceivedTransaction = (transaction: Transaction) => {
 export { Block, getLatestBlock, getBlockchain, getAccountBalance,
     generateNextBlock, generateRawNextBlock, generateNextBlockWithTransaction,
     isValidBlockStructure, isValidNewBlock, isValidChain, replaceChain, 
-    addBlockToChain, sendTransaction, handleReceivedTransaction };
+    addBlockToChain, sendTransaction, handleReceivedTransaction, getUnspentTxOuts, getMyUnspentTransactionOutputs };

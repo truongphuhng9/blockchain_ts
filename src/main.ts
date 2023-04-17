@@ -1,8 +1,13 @@
 import * as express from 'express'
 import * as bodyPaser from 'body-parser'
 
-import {Block, generateRawNextBlock, generateNextBlock, getBlockchain, getAccountBalance, generateNextBlockWithTransaction, sendTransaction} from './blockchain'
+import {
+    Block, generateRawNextBlock, generateNextBlock, getBlockchain, 
+    getAccountBalance, generateNextBlockWithTransaction, sendTransaction,
+    getUnspentTxOuts, getMyUnspentTransactionOutputs
+} from './blockchain'
 import {connectToPeers, getSockets, initP2PServer} from './p2p'
+import {getTransactionPool} from './transactionPool'
 import { getPublicFromWallet, initWallet } from './wallet';
 
 const httpPort: any = parseInt(process.env.HTTP_PORT) || 3001;
@@ -21,6 +26,14 @@ const initHttpServer = (httpPort: number) => {
     app.get('/blocks', (req, res) => {
         res.send(getBlockchain())
     })
+
+    app.get('/uTXOs', (req, res) => {
+        res.send(getUnspentTxOuts());
+    });
+
+    app.get('/my-UTXOs', (req, res) => {
+        res.send(getMyUnspentTransactionOutputs());
+    });
 
     app.post('/mine-raw-block', (req, res) => {
         if (req.body.data == null) {
@@ -81,6 +94,10 @@ const initHttpServer = (httpPort: number) => {
         }
     })
 
+    app.get('/transactionPool', (req, res) => {
+        res.send(getTransactionPool())
+    });
+
     app.get('/peers', (req, res) => {
         res.send(getSockets().map((s: any) => s._socket.remoteAddress + ':' + s._socket.remotePort))
     })
@@ -88,6 +105,11 @@ const initHttpServer = (httpPort: number) => {
     app.post('/add-peer', (req, res) => {
         connectToPeers(req.body.peer)
         res.send();
+    })
+
+    app.post('/stop', (req, res) => {
+        res.send({'msg': 'stopping server'})
+        process.exit()
     })
 
     app.listen(httpPort, () => {
