@@ -1,10 +1,10 @@
 import * as Crypto from "crypto-js"
 import * as _ from "lodash"
 
-import { broadcastLatest } from "./p2p"
+import { broadcastLatest, broadcastTransactionPool } from "./p2p"
 import { hexToBinary } from "./utils"
 import { Transaction, UnspentTxOut, getCoinbaseTransaction, isValidAddress, processTransactions } from "./transaction"
-import { createTransaction, getBalance, getPrivateKeyFromWallet, getPublicFromWallet } from './wallet'
+import { createTransaction, getBalance, getPrivateKeyFromWallet, getPublicFromWallet, findUnspentTxOuts } from './wallet'
 import { getTransactionPool, addToTransactionPool, updateTransactionPool } from './transactionPool'
 // in seconds
 const BLOCK_GENERATION_INTERVAL: number = 10
@@ -159,6 +159,7 @@ const getAccountBalance = (): number => {
 const sendTransaction = (address: string, amount: number) => {
     const tx: Transaction = createTransaction(address, amount, getPrivateKeyFromWallet(), getUnspentTxOuts(), getTransactionPool()) 
     addToTransactionPool(tx, getUnspentTxOuts())
+    broadcastTransactionPool()
     return tx
 }
 
@@ -291,4 +292,4 @@ const handleReceivedTransaction = (transaction: Transaction) => {
 export { Block, getLatestBlock, getBlockchain, getAccountBalance,
     generateNextBlock, generateRawNextBlock, generateNextBlockWithTransaction,
     isValidBlockStructure, isValidNewBlock, isValidChain, replaceChain, 
-    addBlockToChain, sendTransaction };
+    addBlockToChain, sendTransaction, handleReceivedTransaction };
