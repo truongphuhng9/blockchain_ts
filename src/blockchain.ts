@@ -1,7 +1,7 @@
 import * as Crypto from "crypto-js"
 import * as _ from "lodash"
 
-import { broadcastLatest, broadcastTransactionPool } from "./p2p"
+import { broadcastLatest, broadCastTransactionPool } from "./p2p"
 import { hexToBinary } from "./utils"
 import { Transaction, TxIn, TxOut, UnspentTxOut, getCoinbaseTransaction, getTransactionId, isValidAddress, processTransactions } from "./transaction"
 import { createTransaction, getBalance, getPrivateKeyFromWallet, getPublicFromWallet, findUnspentTxOuts } from './wallet'
@@ -71,7 +71,7 @@ const getGenesisTransaction = (address: string): Transaction => {
     return genesisTransaction
 }
 
-const genesisBlock: Block = new Block(0, "2020202020202", '', [], 123456, 0, 0)
+const genesisBlock: Block = new Block(0, "2020202020202", '', [getGenesisTransaction('04998ff100ea5cff6c27aef1a54d00095c2ba6a9b2609afd6a129ca4fe6efd7b01af75692530e80f24804d542147324d1218d1db8c0e03230afe936996c9148ec6')], 123456, 0, 0)
 
 let blockchain: Block[] = [genesisBlock]
 
@@ -165,7 +165,7 @@ const getAccountBalance = (): number => {
 const sendTransaction = (address: string, amount: number) => {
     const tx: Transaction = createTransaction(address, amount, getPrivateKeyFromWallet(), getUnspentTxOuts(), getTransactionPool()) 
     addToTransactionPool(tx, getUnspentTxOuts())
-    broadcastTransactionPool()
+    broadCastTransactionPool()
     return tx
 }
 

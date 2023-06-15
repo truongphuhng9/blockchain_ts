@@ -1,14 +1,18 @@
 import * as express from 'express'
 import * as bodyPaser from 'body-parser'
+import * as _ from 'lodash'
 
 import {
     Block, generateRawNextBlock, generateNextBlock, getBlockchain, 
     getAccountBalance, generateNextBlockWithTransaction, sendTransaction,
     getUnspentTxOuts, getMyUnspentTransactionOutputs
 } from './blockchain'
+import {UnspentTxOut} from './transaction'
 import {connectToPeers, getSockets, initP2PServer} from './p2p'
 import {getTransactionPool} from './transactionPool'
 import { getPublicFromWallet, initWallet } from './wallet';
+
+require('dotenv').config()
 
 const httpPort: any = parseInt(process.env.HTTP_PORT) || 3001;
 const p2pPort: any = parseInt(process.env.P2P_PORT) || 6001
@@ -17,21 +21,47 @@ const initHttpServer = (httpPort: number) => {
     const app = express()
     app.use(bodyPaser.json())
 
+    app.use((req, res, next) => {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        next()
+    })
+
     app.use((err, req, res, next) => {
         if (err) {
             res.status(400).send(err.message)
         }
     })
 
+    app.get('/block/:hash', (req, res) => {
+        const block = _.find(getBlockchain(), {'hash' : req.params.hash})
+        res.send(block)
+    });
+
+    app.get('/transaction/:id', (req, res) => {
+        const tx = _(getBlockchain())
+            .map((blocks) => blocks.data)
+            .flatten()
+            .find({'id': req.params.id})
+        res.send(tx)
+    })
+
+    app.get('/address/:address', (req, res) => {
+        const unspentTxOuts: UnspentTxOut[] =
+            _.filter(getUnspentTxOuts(), (uTxO) => uTxO.address === req.params.address)
+        res.send({'unspentTxOuts': unspentTxOuts})
+    })
+
     app.get('/blocks', (req, res) => {
         res.send(getBlockchain())
     })
 
-    app.get('/uTXOs', (req, res) => {
+    app.get('/utxos', (req, res) => {
         res.send(getUnspentTxOuts());
     });
 
-    app.get('/my-UTXOs', (req, res) => {
+    app.get('/my-utxos', (req, res) => {
         res.send(getMyUnspentTransactionOutputs());
     });
 
@@ -94,7 +124,7 @@ const initHttpServer = (httpPort: number) => {
         }
     })
 
-    app.get('/transactionPool', (req, res) => {
+    app.get('/transaction-pool', (req, res) => {
         res.send(getTransactionPool())
     });
 

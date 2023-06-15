@@ -2,9 +2,10 @@ import {ec} from 'elliptic'
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
 import * as _ from 'lodash'
 import { Transaction, TxIn, TxOut, UnspentTxOut, getPublicKey, getTransactionId, signTxIn } from './transaction'
+require('dotenv').config()
 
 const EC = new ec('secp256k1')
-const privateKeyLocation = __dirname + '/node/wallet/private_key'
+const privateKeyLocation = __dirname + (process.env.PRIVATE_KEY_LOCATION || '/node/wallet/private_key')
 
 const generatePrivateKey = ():string => {
     const keyPair = EC.genKeyPair()
@@ -18,6 +19,7 @@ const getPrivateKeyFromWallet = (): string => {
 }
 
 const getPublicFromWallet = (): string => {
+    console.log('The location of private: ' + privateKeyLocation)
     const privateKey = getPrivateKeyFromWallet()
     const key = EC.keyFromPrivate(privateKey, 'hex')
     return key.getPublic().encode('hex')
@@ -112,7 +114,7 @@ const createTransaction = (receiverAddress: string, amount: number, privateKey: 
     }
 
     const unsignedTxIns: TxIn[] = includedUnspentTxOuts.map(toUnsignedTxIn)
-    
+
     const tx: Transaction = new Transaction()
     tx.txIns = unsignedTxIns
     tx.txOuts = createTxOuts(receiverAddress, myAddress, amount, leftOverAmount)

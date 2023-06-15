@@ -13,7 +13,7 @@ const addToTransactionPool = (tx: Transaction, aUnspentTxOuts: UnspentTxOut[]) =
         throw Error('Trying to add invalid tx to pool')
     }
 
-    if (!isValidTxForPool) {
+    if (!isValidTxForPool(tx, transactionPool)) {
         throw Error('Trying to add invalid tx to pool')
     }
 
